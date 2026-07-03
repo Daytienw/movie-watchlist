@@ -1,4 +1,4 @@
-package com.daytien.expense_tracker;
+package com.daytien.movie_watchlist;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -8,7 +8,7 @@ public class HelloController {
 
 	@GetMapping("/")
 	public String hello() {
-		return "Hello, World!";
+		return "Hello, Movie Watchlist!";
 	}
 
 }
