@@ -1,4 +1,4 @@
-package com.daytien.movie_watchlist;
+package com.daytien.movie_watchlist.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

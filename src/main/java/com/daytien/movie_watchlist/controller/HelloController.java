@@ -1,4 +1,4 @@
-package com.daytien.movie_watchlist;
+package com.daytien.movie_watchlist.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
