@@ -1,7 +1,11 @@
 package com.daytien.movie_watchlist.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class MovieResponse {
 
     @JsonProperty("Title")
@@ -12,29 +16,4 @@ public class MovieResponse {
 
     @JsonProperty("Plot")
     private String plot;
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getYear() {
-        return year;
-    }
-
-    public void setYear(String year) {
-        this.year = year;
-    }
-
-    public String getPlot() {
-        return plot;
-    }
-
-    public void setPlot(String plot) {
-        this.plot = plot;
-    }
-    
 }
