@@ -17,7 +17,7 @@ public class MovieController {
 
     // Endpoint: http://localhost:8080/api/movie?title=Inception
     @GetMapping("/api/movie")
-    public MovieResponse getMovie(@RequestParam String title) {
+    public MovieResponse getMovie(@RequestParam("title") String title) {
         return movieService.fetchMovieFromOmdb(title);
     }
 }
