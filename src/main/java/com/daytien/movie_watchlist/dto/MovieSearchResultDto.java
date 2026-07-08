@@ -6,11 +6,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class MovieSearchResult {
+public class MovieSearchResultDto {
 
     private String title;
     private String year;
     private String imdbID;
     private String poster;
-    
+
 }

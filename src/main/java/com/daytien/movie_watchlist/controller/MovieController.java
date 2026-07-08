@@ -1,6 +1,6 @@
 package com.daytien.movie_watchlist.controller;
 
-import com.daytien.movie_watchlist.dto.MovieResponse;
+import com.daytien.movie_watchlist.dto.MovieResponseDto;
 import com.daytien.movie_watchlist.service.MovieService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +17,7 @@ public class MovieController {
 
     // Endpoint: http://localhost:8080/api/movie?title=Inception
     @GetMapping("/api/movie")
-    public MovieResponse getMovie(@RequestParam("title") String title) {
+    public MovieResponseDto getMovie(@RequestParam("title") String title) {
         return movieService.fetchMovieFromOmdb(title);
     }
 }

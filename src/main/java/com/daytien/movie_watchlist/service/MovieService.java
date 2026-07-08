@@ -1,6 +1,6 @@
 package com.daytien.movie_watchlist.service;
 
-import com.daytien.movie_watchlist.dto.MovieResponse;
+import com.daytien.movie_watchlist.dto.MovieResponseDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,7 +22,7 @@ public class MovieService {
         this.restTemplate = restTemplate;
     }
 
-    public MovieResponse fetchMovieFromOmdb(String movieTitle) {
+    public MovieResponseDto fetchMovieFromOmdb(String movieTitle) {
         // Construct URL: https://omdbapi.com
         String url = UriComponentsBuilder.fromUriString(baseUrl)
                 .queryParam("apikey", apiKey)
@@ -30,6 +30,6 @@ public class MovieService {
                 .toUriString();
 
         // Make the GET request and automatically map JSON to MovieResponse class
-        return restTemplate.getForObject(url, MovieResponse.class);
+        return restTemplate.getForObject(url, MovieResponseDto.class);
     }
 }

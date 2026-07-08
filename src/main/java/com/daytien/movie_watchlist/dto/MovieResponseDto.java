@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class MovieResponse {
+public class MovieResponseDto {
 
     @JsonProperty("Title")
     private String title;

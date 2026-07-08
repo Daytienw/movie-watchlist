@@ -1,6 +1,6 @@
 package com.daytien.movie_watchlist.service;
 
-import com.daytien.movie_watchlist.dto.MovieResponse;
+import com.daytien.movie_watchlist.dto.MovieResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,25 +33,25 @@ class MovieServiceTest {
 
     @Test
     void fetchMovieFromOmdb_returnsResponseFromRestTemplate() {
-        MovieResponse expected = new MovieResponse();
+        MovieResponseDto expected = new MovieResponseDto();
         expected.setTitle("Inception");
         expected.setYear("2010");
         expected.setPlot("A thief who steals corporate secrets...");
-        when(restTemplate.getForObject(anyString(), eq(MovieResponse.class))).thenReturn(expected);
+        when(restTemplate.getForObject(anyString(), eq(MovieResponseDto.class))).thenReturn(expected);
 
-        MovieResponse actual = movieService.fetchMovieFromOmdb("Inception");
+        MovieResponseDto actual = movieService.fetchMovieFromOmdb("Inception");
 
         assertThat(actual).isSameAs(expected);
     }
 
     @Test
     void fetchMovieFromOmdb_buildsUrlWithBaseUrlApiKeyAndTitle() {
-        when(restTemplate.getForObject(anyString(), eq(MovieResponse.class))).thenReturn(new MovieResponse());
+        when(restTemplate.getForObject(anyString(), eq(MovieResponseDto.class))).thenReturn(new MovieResponseDto());
 
         movieService.fetchMovieFromOmdb("The Matrix");
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(restTemplate).getForObject(urlCaptor.capture(), eq(MovieResponse.class));
+        verify(restTemplate).getForObject(urlCaptor.capture(), eq(MovieResponseDto.class));
         String url = urlCaptor.getValue();
 
         assertThat(url).startsWith("https://www.omdbapi.com");
@@ -61,9 +61,9 @@ class MovieServiceTest {
 
     @Test
     void fetchMovieFromOmdb_returnsNullWhenRestTemplateReturnsNull() {
-        when(restTemplate.getForObject(anyString(), eq(MovieResponse.class))).thenReturn(null);
+        when(restTemplate.getForObject(anyString(), eq(MovieResponseDto.class))).thenReturn(null);
 
-        MovieResponse actual = movieService.fetchMovieFromOmdb("Unknown Movie Title 12345");
+        MovieResponseDto actual = movieService.fetchMovieFromOmdb("Unknown Movie Title 12345");
 
         assertThat(actual).isNull();
     }

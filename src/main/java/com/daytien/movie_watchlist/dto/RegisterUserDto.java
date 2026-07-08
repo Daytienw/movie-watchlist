@@ -1,14 +1,14 @@
 package com.daytien.movie_watchlist.dto;
 
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class LoginRequest {
+public class RegisterUserDto {
 
-    private String username;
+    private String fullName;
+    private String email;
     private String password;
-    
+
 }
