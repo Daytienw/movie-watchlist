@@ -10,8 +10,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,7 +39,7 @@ class MovieServiceTest {
         expected.setTitle("Inception");
         expected.setYear("2010");
         expected.setPlot("A thief who steals corporate secrets...");
-        when(restTemplate.getForObject(anyString(), eq(MovieResponseDto.class))).thenReturn(expected);
+        when(restTemplate.getForObject(any(URI.class), eq(MovieResponseDto.class))).thenReturn(expected);
 
         MovieResponseDto actual = movieService.fetchMovieFromOmdb("Inception");
 
@@ -46,13 +48,13 @@ class MovieServiceTest {
 
     @Test
     void fetchMovieFromOmdb_buildsUrlWithBaseUrlApiKeyAndTitle() {
-        when(restTemplate.getForObject(anyString(), eq(MovieResponseDto.class))).thenReturn(new MovieResponseDto());
+        when(restTemplate.getForObject(any(URI.class), eq(MovieResponseDto.class))).thenReturn(new MovieResponseDto());
 
         movieService.fetchMovieFromOmdb("The Matrix");
 
-        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<URI> urlCaptor = ArgumentCaptor.forClass(URI.class);
         verify(restTemplate).getForObject(urlCaptor.capture(), eq(MovieResponseDto.class));
-        String url = urlCaptor.getValue();
+        String url = urlCaptor.getValue().toString();
 
         assertThat(url).startsWith("https://www.omdbapi.com");
         assertThat(url).contains("apikey=test-api-key");
@@ -61,7 +63,7 @@ class MovieServiceTest {
 
     @Test
     void fetchMovieFromOmdb_returnsNullWhenRestTemplateReturnsNull() {
-        when(restTemplate.getForObject(anyString(), eq(MovieResponseDto.class))).thenReturn(null);
+        when(restTemplate.getForObject(any(URI.class), eq(MovieResponseDto.class))).thenReturn(null);
 
         MovieResponseDto actual = movieService.fetchMovieFromOmdb("Unknown Movie Title 12345");
 
