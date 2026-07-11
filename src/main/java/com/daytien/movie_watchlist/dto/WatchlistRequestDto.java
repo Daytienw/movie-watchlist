@@ -12,4 +12,5 @@ public class WatchlistRequestDto {
     private String title;
     private String year;
     private String poster;
+    private String status;
 }
