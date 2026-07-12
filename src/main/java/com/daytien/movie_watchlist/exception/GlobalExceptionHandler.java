@@ -46,6 +46,11 @@ public class GlobalExceptionHandler {
             errorDetail.setProperty("description", "You are not authorized to access this resource");
         }
 
+        if (exception instanceof NotFoundException) {
+            errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), exception.getMessage());
+            errorDetail.setProperty("description", "The requested resource was not found");
+        }
+
         if (exception instanceof SignatureException) {
             errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(403), exception.getMessage());
             errorDetail.setProperty("description", "The JWT signature is invalid");

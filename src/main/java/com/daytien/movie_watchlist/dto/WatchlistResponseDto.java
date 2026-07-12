@@ -3,6 +3,8 @@ package com.daytien.movie_watchlist.dto;
 
 import java.time.LocalDateTime;
 
+import com.daytien.movie_watchlist.entity.WatchlistStatus;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +17,7 @@ public class WatchlistResponseDto {
     private String title;
     private String year;
     private String poster;
-    private String status;
+    private WatchlistStatus status;
     private LocalDateTime addedDate;
 
 }

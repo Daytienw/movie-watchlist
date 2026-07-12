@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Movie Watchlist API",
-    "description": "Collection for the movie-watchlist Spring Boot project: auth (signup/login with JWT), user info, OMDb-backed movie lookup, and watchlist CRUD.\n\nRun \"Login\" first (or \"Signup\" then \"Login\") — it auto-saves the JWT into the `token` collection variable, which every other request uses via Bearer auth.\n\nKnown issues surfaced while mapping the API (useful context when a request fails):\n- `POST /api/watchlist/` currently 500s: the service never sets `status`/`addedDate`/`user` on the new item, and those columns are NOT NULL.\n- `/api/movie` (singular) requires a JWT even though `SecurityConfig` permits `/api/movies/**` (plural) — the paths don't match, so auth is effectively required.\n- `GET /api/watchlist/{id}` and `PUT`/`DELETE` on a missing id return 500 instead of 404 (unhandled `NoSuchElementException`/`RuntimeException`).\n- Signup/`/api/users/*` responses return the raw `User` entity, including the bcrypt password hash.",
+    "description": "Collection for the movie-watchlist Spring Boot project: auth (signup/login with JWT), user info, OMDb-backed movie lookup, and watchlist CRUD.\n\nRun \"Login\" first (or \"Signup\" then \"Login\") — it auto-saves the JWT into the `token` collection variable, which every other request uses via Bearer auth. Run \"Login (User B)\" to populate `tokenB`/`watchlistIdB` for the cross-user ownership checks under Watchlist.\n\nWatchlist behavior notes:\n- `status` is now an enum: only `TO_WATCH` or `WATCHED` are valid; any other value returns 400.\n- `GET /api/watchlist/` is paginated and scoped to the authenticated user — response is a Spring `Page` object (`content`, `totalElements`, `totalPages`, etc.), not a raw array. Supports `?page=`, `?size=`, `?sort=`, and `?status=TO_WATCH|WATCHED`.\n- `GET`/`PUT`/`DELETE` on a missing id, or on an id owned by a different user, both return 404 (not 500/403) — this is intentional, so a caller can't distinguish \"doesn't exist\" from \"not yours\".\n\nRemaining known issues (not yet fixed):\n- `/api/movie` (singular) requires a JWT even though `SecurityConfig` permits `/api/movies/**` (plural) — the paths don't match, so auth is effectively required.\n- Signup/`/api/users/*` responses return the raw `User` entity, including the bcrypt password hash.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -17,6 +17,16 @@
     },
     {
       "key": "watchlistId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "watchlistIdB",
       "value": "",
       "type": "string"
     }
@@ -91,6 +101,65 @@
               "path": ["api", "auth", "login"]
             },
             "description": "Logs in and returns { token, expiresIn }. The test script auto-saves the token into the {{token}} collection variable for use by all other requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Signup (User B)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Bob Smith\",\n  \"email\": \"bob.smith@example.com\",\n  \"password\": \"P@ssw0rd123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Registers a second user, used to exercise the cross-user ownership checks under Watchlist."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('tokenB', body.token);",
+                  "        console.log('Saved JWT to {{tokenB}} collection variable');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"bob.smith@example.com\",\n  \"password\": \"P@ssw0rd123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Logs in as User B and saves the JWT into {{tokenB}}, used only by the cross-user requests under Watchlist."
           },
           "response": []
         }
@@ -180,14 +249,75 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"imdbId\": \"tt1375666\",\n  \"title\": \"Inception\",\n  \"year\": \"2010\",\n  \"poster\": \"https://example.com/poster.jpg\",\n  \"status\": \"PLANNED\"\n}"
+              "raw": "{\n  \"imdbId\": \"tt1375666\",\n  \"title\": \"Inception\",\n  \"year\": \"2010\",\n  \"poster\": \"https://example.com/poster.jpg\",\n  \"status\": \"TO_WATCH\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/watchlist/",
               "host": ["{{baseUrl}}"],
               "path": ["api", "watchlist", ""]
             },
-            "description": "Requires Bearer JWT. NOTE: as currently implemented, WatchlistService.create() does not set status/addedDate/user on the new entity, and those columns are NOT NULL — this request is expected to 500 until that's fixed."
+            "description": "Requires Bearer JWT. `status` must be `TO_WATCH` or `WATCHED` (enum) — any other value returns 400. Item is owned by whichever user's token is used."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Watchlist Item (User B, for ownership tests)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.id) {",
+                  "        pm.collectionVariables.set('watchlistIdB', body.id);",
+                  "        console.log('Saved watchlist id to {{watchlistIdB}}');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{tokenB}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imdbId\": \"tt0133093\",\n  \"title\": \"The Matrix\",\n  \"year\": \"1999\",\n  \"poster\": \"https://example.com/poster2.jpg\",\n  \"status\": \"TO_WATCH\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ""]
+            },
+            "description": "Uses {{tokenB}} (User B) instead of the collection default {{token}}. Saves the created id to {{watchlistIdB}} for the cross-user checks below."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Watchlist Item - Invalid Status (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imdbId\": \"tt9999999\",\n  \"title\": \"Bad Status\",\n  \"year\": \"2020\",\n  \"poster\": \"https://example.com/poster.jpg\",\n  \"status\": \"PLANNED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ""]
+            },
+            "description": "`PLANNED` is not a valid WatchlistStatus (only TO_WATCH/WATCHED are) — expect 400."
           },
           "response": []
         },
@@ -201,7 +331,43 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "watchlist", ""]
             },
-            "description": "Requires Bearer JWT. Returns ALL watchlist items in the DB (not currently scoped to the authenticated user)."
+            "description": "Requires Bearer JWT. Scoped to the authenticated user only. Response is a paginated Spring `Page` object: `{ content: [...], totalElements, totalPages, size, number, ... }`, not a raw array."
+          },
+          "response": []
+        },
+        {
+          "name": "List Watchlist Items - Paginated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/?page=0&size=5&sort=addedDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ""],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" },
+                { "key": "sort", "value": "addedDate,desc" }
+              ]
+            },
+            "description": "Demonstrates page/size/sort query params. Default size is 20 if omitted."
+          },
+          "response": []
+        },
+        {
+          "name": "List Watchlist Items - Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/?status=TO_WATCH",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ""],
+              "query": [
+                { "key": "status", "value": "TO_WATCH" }
+              ]
+            },
+            "description": "`status` query param filters to TO_WATCH or WATCHED. All items in `content` should match the filter."
           },
           "response": []
         },
@@ -215,7 +381,21 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "watchlist", "{{watchlistId}}"]
             },
-            "description": "Requires Bearer JWT. Returns 500 (not 404) if the id doesn't exist."
+            "description": "Requires Bearer JWT. Returns 404 if the id doesn't exist."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Watchlist Item by Id - Cross-User (expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/{{watchlistIdB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "{{watchlistIdB}}"]
+            },
+            "description": "Uses the default {{token}} (User A) to fetch an item owned by User B ({{watchlistIdB}}). Expect 404, not 403 or 200 — ownership mismatches are indistinguishable from not-found by design."
           },
           "response": []
         },
@@ -235,7 +415,27 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "watchlist", "{{watchlistId}}"]
             },
-            "description": "Requires Bearer JWT. Returns 500 (not 404) if the id doesn't exist."
+            "description": "Requires Bearer JWT. Returns 404 if the id doesn't exist."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Watchlist Item - Cross-User (expect 404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imdbId\": \"tt0133093\",\n  \"title\": \"Hijacked\",\n  \"year\": \"1999\",\n  \"poster\": \"https://example.com/poster2.jpg\",\n  \"status\": \"WATCHED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/{{watchlistIdB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "{{watchlistIdB}}"]
+            },
+            "description": "Uses the default {{token}} (User A) to attempt updating User B's item ({{watchlistIdB}}). Expect 404."
           },
           "response": []
         },
@@ -249,7 +449,21 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "watchlist", "{{watchlistId}}"]
             },
-            "description": "Requires Bearer JWT. Returns 204 on success; 500 (not 404) if the id doesn't exist."
+            "description": "Requires Bearer JWT. Returns 204 on success; 404 if the id doesn't exist."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Watchlist Item - Cross-User (expect 404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/{{watchlistIdB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "{{watchlistIdB}}"]
+            },
+            "description": "Uses the default {{token}} (User A) to attempt deleting User B's item ({{watchlistIdB}}). Expect 404, and the item should still exist afterward (verify via User B's own GET)."
           },
           "response": []
         }

@@ -1,6 +1,8 @@
 package com.daytien.movie_watchlist.dto;
 
 
+import com.daytien.movie_watchlist.entity.WatchlistStatus;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,5 +14,5 @@ public class WatchlistRequestDto {
     private String title;
     private String year;
     private String poster;
-    private String status;
+    private WatchlistStatus status;
 }

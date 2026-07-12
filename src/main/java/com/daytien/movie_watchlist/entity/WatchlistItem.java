@@ -1,6 +1,8 @@
 package com.daytien.movie_watchlist.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,8 +39,9 @@ public class WatchlistItem {
     @Column(name = "poster", nullable = false)
     private String poster;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;    
+    private WatchlistStatus status;
     
     @Column(name = "addedDate", nullable = false)
     private LocalDateTime addedDate;
