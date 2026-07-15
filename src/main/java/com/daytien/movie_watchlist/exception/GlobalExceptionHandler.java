@@ -46,9 +46,14 @@ public class GlobalExceptionHandler {
             errorDetail.setProperty("description", "You are not authorized to access this resource");
         }
 
-        if (exception instanceof NotFoundException) {
+        if (exception instanceof ResourceNotFoundException) {
             errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), exception.getMessage());
             errorDetail.setProperty("description", "The requested resource was not found");
+        }
+
+        if (exception instanceof OmdbException) {
+            errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(502), exception.getMessage());
+            errorDetail.setProperty("description", "The OMDb API could not fulfill this request");
         }
 
         if (exception instanceof SignatureException) {

@@ -12,7 +12,7 @@ import com.daytien.movie_watchlist.dto.WatchlistResponseDto;
 import com.daytien.movie_watchlist.entity.User;
 import com.daytien.movie_watchlist.entity.WatchlistItem;
 import com.daytien.movie_watchlist.entity.WatchlistStatus;
-import com.daytien.movie_watchlist.exception.NotFoundException;
+import com.daytien.movie_watchlist.exception.ResourceNotFoundException;
 import com.daytien.movie_watchlist.repository.WatchlistRepository;
 
 @Service
@@ -71,9 +71,9 @@ public class WatchlistService {
      public WatchlistResponseDto getById(Long id) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         WatchlistItem item = watchlistRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Watchlist item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Watchlist item not found with id: " + id));
         if (!item.getUser().getId().equals(currentUser.getId())) {
-            throw new NotFoundException("Watchlist item not found with id: " + id);
+            throw new ResourceNotFoundException("Watchlist item not found with id: " + id);
         }
         WatchlistResponseDto response = new WatchlistResponseDto();
         response.setId(item.getId());
@@ -95,7 +95,7 @@ public class WatchlistService {
 
         return watchlistRepository.findById(id).map(existingItem -> {
         if (!existingItem.getUser().getId().equals(currentUser.getId())) {
-            throw new NotFoundException("Watchlist item not found with id: " + id);
+            throw new ResourceNotFoundException("Watchlist item not found with id: " + id);
         }
         existingItem.setImdbId(incomingData.getImdbId());
         existingItem.setTitle(incomingData.getTitle());
@@ -111,15 +111,15 @@ public class WatchlistService {
         response.setStatus(savedItem.getStatus());
         response.setAddedDate(savedItem.getAddedDate());
         return response;
-        }).orElseThrow(() -> new NotFoundException("Watchlist item not found with id: " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Watchlist item not found with id: " + id));
      }
 
      public void deleteItem(Long id){
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         WatchlistItem item = watchlistRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Watchlist item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Watchlist item not found with id: " + id));
         if (!item.getUser().getId().equals(currentUser.getId())) {
-            throw new NotFoundException("Watchlist item not found with id: " + id);
+            throw new ResourceNotFoundException("Watchlist item not found with id: " + id);
         }
         watchlistRepository.deleteById(id);
      }
