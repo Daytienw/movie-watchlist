@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import java.time.LocalDateTime;
 
@@ -17,17 +18,26 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "watchlistItems")
+@Table(
+    name = "watchlistItems",
+    // Uniqueness is per user, not global: two people must both be able to
+    // add the same film. A bare unique=true on imdbId would let whoever
+    // added it first block everyone else forever.
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_watchlist_user_imdb",
+        columnNames = {"user_id", "imdbId"}
+    )
+)
 @Getter
 @Setter
 public class WatchlistItem {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "imdbId", nullable = false, unique = true)
+    @Column(name = "imdbId", nullable = false)
     private String imdbId;
     
     @Column(name = "title", nullable = false)

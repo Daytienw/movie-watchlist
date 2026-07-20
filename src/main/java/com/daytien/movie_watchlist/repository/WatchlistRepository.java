@@ -14,4 +14,6 @@ public interface WatchlistRepository extends JpaRepository<WatchlistItem, Long> 
 
     Page<WatchlistItem> findByUserIdAndStatus(Long userId, WatchlistStatus status, Pageable pageable);
 
+    boolean existsByUserIdAndImdbId(Long userId, String imdbId);
+
 }

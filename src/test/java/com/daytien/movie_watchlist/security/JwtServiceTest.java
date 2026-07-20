@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -64,6 +65,20 @@ class JwtServiceTest {
 
         assertThatThrownBy(() -> jwtService.isTokenValid(token, userDetails))
                 .isInstanceOf(ExpiredJwtException.class);
+    }
+
+    /**
+     * Pins the exception type the handler keys off. This used to be mapped
+     * against java.security.SignatureException, which JJWT never throws, so
+     * tampered tokens fell through to a 500.
+     */
+    @Test
+    void extractUsername_forTamperedSignature_throwsJjwtSignatureException() {
+        String token = jwtService.generateToken(userDetails("daytien@gmail.com"));
+        String tampered = token.substring(0, token.lastIndexOf('.') + 1) + "Zm9yZ2VkLXNpZ25hdHVyZQ";
+
+        assertThatThrownBy(() -> jwtService.extractUsername(tampered))
+                .isInstanceOf(SignatureException.class);
     }
 
     @Test

@@ -12,6 +12,7 @@ import com.daytien.movie_watchlist.dto.WatchlistResponseDto;
 import com.daytien.movie_watchlist.entity.User;
 import com.daytien.movie_watchlist.entity.WatchlistItem;
 import com.daytien.movie_watchlist.entity.WatchlistStatus;
+import com.daytien.movie_watchlist.exception.DuplicateResourceException;
 import com.daytien.movie_watchlist.exception.ResourceNotFoundException;
 import com.daytien.movie_watchlist.repository.WatchlistRepository;
 
@@ -25,6 +26,10 @@ public class WatchlistService {
 
      public WatchlistResponseDto create(WatchlistRequestDto input) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (watchlistRepository.existsByUserIdAndImdbId(currentUser.getId(), input.getImdbId())) {
+            throw new DuplicateResourceException("That movie is already on your watchlist");
+        }
 
         WatchlistItem item = new WatchlistItem();
         WatchlistResponseDto response = new WatchlistResponseDto();

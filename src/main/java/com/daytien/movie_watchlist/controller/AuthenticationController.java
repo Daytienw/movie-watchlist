@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.daytien.movie_watchlist.dto.LoginUserDto;
 import com.daytien.movie_watchlist.dto.RegisterUserDto;
+import com.daytien.movie_watchlist.dto.UserResponseDto;
 import com.daytien.movie_watchlist.security.JwtService;
 import com.daytien.movie_watchlist.service.AuthenticationService;
+
+import jakarta.validation.Valid;
 
 @RequestMapping("/api/auth")
 @RestController
@@ -27,14 +30,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody RegisterUserDto registerUserDto){
+    public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterUserDto registerUserDto){
         User registeredUser = authenticationService.signup(registerUserDto);
 
-        return ResponseEntity.ok(registeredUser);
+        return ResponseEntity.ok(UserResponseDto.from(registeredUser));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto){
+    public ResponseEntity<LoginResponse> authenticate(@Valid @RequestBody LoginUserDto loginUserDto){
 
         User authenticatedUser = authenticationService.authenticate(loginUserDto);
         String jwtToken = jwtService.generateToken(authenticatedUser);

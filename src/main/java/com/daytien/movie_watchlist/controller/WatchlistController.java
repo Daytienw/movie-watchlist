@@ -17,6 +17,9 @@ import com.daytien.movie_watchlist.dto.WatchlistRequestDto;
 import com.daytien.movie_watchlist.dto.WatchlistResponseDto;
 import com.daytien.movie_watchlist.entity.WatchlistStatus;
 import com.daytien.movie_watchlist.service.WatchlistService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -32,7 +35,7 @@ public class WatchlistController {
     }
 
     @PostMapping
-    public ResponseEntity<WatchlistResponseDto> createWatchlistItem(@RequestBody WatchlistRequestDto payload){
+    public ResponseEntity<WatchlistResponseDto> createWatchlistItem(@Valid @RequestBody WatchlistRequestDto payload){
         WatchlistResponseDto savedWatchlist = watchlistService.create(payload);
 
         return new ResponseEntity<>(savedWatchlist, HttpStatus.CREATED);
@@ -53,12 +56,10 @@ public class WatchlistController {
     }
     
     @PutMapping("{id}")
-    public ResponseEntity<WatchlistResponseDto> putMethodName(@PathVariable("id") Long id, @RequestBody WatchlistRequestDto watchlistRequestDto) {
-        //TODO: process PUT request
+    public ResponseEntity<WatchlistResponseDto> updateWatchlistItem(@PathVariable("id") Long id, @Valid @RequestBody WatchlistRequestDto watchlistRequestDto) {
         WatchlistResponseDto item = watchlistService.updateItem(id, watchlistRequestDto);
 
         return ResponseEntity.ok(item);
-
     }
 
     @DeleteMapping("{id}")

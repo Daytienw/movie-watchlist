@@ -1,6 +1,5 @@
 package com.daytien.movie_watchlist.service;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.daytien.movie_watchlist.dto.LoginUserDto;
 import com.daytien.movie_watchlist.dto.RegisterUserDto;
 import com.daytien.movie_watchlist.entity.User;
+import com.daytien.movie_watchlist.exception.DuplicateResourceException;
+import com.daytien.movie_watchlist.exception.ResourceNotFoundException;
 import com.daytien.movie_watchlist.repository.UserRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,7 +104,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void authenticate_whenUserNotFoundAfterAuthentication_throwsNoSuchElementException() {
+    void authenticate_whenUserNotFoundAfterAuthentication_throwsResourceNotFound() {
         LoginUserDto input = new LoginUserDto();
         input.setEmail("missing@gmail.com");
         input.setPassword("apple");
@@ -111,6 +112,21 @@ class AuthenticationServiceTest {
         when(userRepository.findByEmail("missing@gmail.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authenticationService.authenticate(input))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void signup_whenEmailAlreadyRegistered_throwsDuplicateResource() {
+        RegisterUserDto input = new RegisterUserDto();
+        input.setFullName("aaron dylan");
+        input.setEmail("taken@gmail.com");
+        input.setPassword("correct-horse");
+
+        when(userRepository.findByEmail("taken@gmail.com")).thenReturn(Optional.of(new User()));
+
+        assertThatThrownBy(() -> authenticationService.signup(input))
+                .isInstanceOf(DuplicateResourceException.class);
+
+        verify(userRepository, never()).save(any());
     }
 }

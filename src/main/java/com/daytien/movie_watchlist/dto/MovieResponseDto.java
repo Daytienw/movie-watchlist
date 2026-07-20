@@ -17,6 +17,12 @@ public class MovieResponseDto {
     @JsonProperty("Plot")
     private String plot;
 
+    @JsonProperty("Poster")
+    private String poster;
+
+    @JsonProperty("imdbID")
+    private String imdbId;
+
     @JsonProperty("Response")
     private String response;
 
